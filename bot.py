@@ -137,7 +137,8 @@ async def follow(ctx, *, arg):
         await ctx.send("uh oh stinky")
         await ctx.send("Team not found.")
     else:
-        with bot.db.acquire() as connection:
+        # need to write a helper function that handles db connections and exceptions YEP
+        async with bot.db.acquire() as connection:
             try:
                 await connection.execute(
                     "DELETE FROM discordguilds WHERE guild_id = $1", guild_id
