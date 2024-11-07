@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncpg
 import asyncio
 import os
-import re
+import traceback
 from dotenv import load_dotenv
 from teams import teams
 
@@ -50,7 +50,8 @@ async def init_db():
         print("------")
     except Exception as e:
         print("------")
-        print(f"Exception occurred: {e}")
+        print(f"Exception occurred:")
+        traceback.print_exc()
         print("------")
 
 
@@ -65,9 +66,6 @@ async def on_ready():
     print("------")
     print(f"Logged into Discord as {bot.user} (ID: {bot.user.id})")
     print("------")
-
-    # db_request = await bot.db.fetch("SELECT * FROM public.discordguilds WHERE followedteam='Pittsburgh Pirates'")
-    # print(db_request[0]['guild_id'])
 
 
 # ADD DB ENTRY WHEN BOT JOINS AND DELETE DB ENTRY WHEN BOT LEAVES GUILD
@@ -87,7 +85,8 @@ async def add_guild_to_db(guild_id):
             print("------")
         except Exception as e:
             print("------")
-            print(f"Exception occured: {e}")
+            print(f"Exception occured:")
+            traceback.print_exc()
             print("------")
 
 
@@ -107,7 +106,8 @@ async def remove_guild_from_db(guild_id):
             print("------")
         except Exception as e:
             print("------")
-            print(f"Exception occured: {e}")
+            print(f"Exception occured:")
+            traceback.print_exc()
             print("------")
 
 
@@ -131,8 +131,8 @@ async def on_guild_remove(guild):
 
 # FOLLOW A TEAM
 @bot.command()
-async def follow(ctx, *, arg):
-    if arg.title() not in teams:
+async def follow(ctx, arg):
+    if arg not in teams:
         await ctx.send(f"{arg}")
         await ctx.send("uh oh stinky")
         await ctx.send("Team not found.")
@@ -140,8 +140,14 @@ async def follow(ctx, *, arg):
         # need to write a helper function that handles db connections and exceptions YEP
         async with bot.db.acquire() as connection:
             try:
-                await connection.execute(
-                    "DELETE FROM discordguilds WHERE guild_id = $1", guild_id
+                await ctx.send(f'{arg}')
+                print(type(arg))
+                print(arg)
+                await connection.execute('''
+                    UPDATE discordguilds
+                    SET followed_teams = $1
+                    WHERE guild_id = $2
+                    ''', arg, str(ctx.guild.id)
                 )
             except asyncio.TimeoutError:
                 print("------")
@@ -149,9 +155,10 @@ async def follow(ctx, *, arg):
                 print("------")
             except Exception as e:
                 print("------")
-                print(f"Exception occured: {e}")
+                print(f"Exception occured:")
+                traceback.print_exc()
                 print("------")
-        await ctx.send(f"You're now following the {arg.title()}.")
+        await ctx.send(f"Now following: {arg}.")
 
 
 # async def table_does_exist():
